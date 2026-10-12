@@ -70,7 +70,13 @@ def cantilever_modes(E: float, I: float, rho: float, A: float, length: float,
 
 
 # beta_n * L for a cantilever: roots of 1 + cos(x) cosh(x) = 0
-CANTILEVER_BETA_L = np.array([1.875104, 4.694091, 7.854757, 10.995541])
+# (given to full precision, so the convergence study is not limited by rounding)
+CANTILEVER_BETA_L = np.array([
+    1.8751040687119611,
+    4.6940911329741745,
+    7.8547574382376126,
+    10.995540734875467,
+])
 
 
 def cantilever_exact_frequencies(E: float, I: float, rho: float, A: float, length: float) -> np.ndarray:
