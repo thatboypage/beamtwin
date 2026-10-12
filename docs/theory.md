@@ -141,3 +141,46 @@ frequencies approach the exact values from above.
 A crack lowers the local stiffness, which lowers the frequencies by an amount
 that depends on where the crack is relative to each mode's bending. Step 4
 uses this to work backwards from measured frequencies to the damage.
+
+## 6. Damage model and surrogate training data (Step 3a)
+
+**Damage as stiffness loss.** A crack or corrosion reduces the bending
+stiffness EI locally. Each element e receives a factor fₑ, so its stiffness
+matrix becomes fₑ · kₑ (fₑ = 1 is healthy). The factors follow a smooth dip:
+
+    f(x) = 1 − α · exp( −½ · ((x − x_d) / w)² )
+
+with x, x_d and w as fractions of the beam length: x_d is the damage centre,
+α the severity (stiffness lost at the centre) and w the width (0.04 here).
+Mass is unchanged, since a crack removes stiffness but almost no material.
+
+A smooth profile is chosen over weakening a single element so that outputs
+change smoothly as the damage moves, which makes the relationship learnable.
+
+**Sampling.** Seven inputs are sampled by Latin hypercube, which divides each
+range into n equal slices and places exactly one sample in each slice, so all
+regions are covered with fewer samples than random sampling needs:
+
+| Input | Range |
+|---|---|
+| Length L | 0.5 – 2.0 m |
+| Width b | 20 – 100 mm |
+| Thickness h | 5 – 20 mm |
+| Young's modulus E | 70 – 210 GPa |
+| Specific stiffness E/ρ | 24 – 27 MJ/kg (density derived from it) |
+| Damage location x_d | 0.05 – 0.95 |
+| Damage severity α | 0 – 0.5 |
+
+E and ρ are not sampled independently: for structural metals E/ρ is nearly
+constant (about 25 MJ/kg), so independent sampling would create materials that
+do not exist.
+
+**Outputs.** For each sample, a 50-element FEM model gives the first four
+natural frequencies and the four mode shapes at nine sensor positions
+(10 %, 20 %, …, 90 % of the length): 40 numbers in total.
+
+**Why the surrogate must be very accurate.** Across the dataset, damage lowers
+the frequencies by about 1.5 % on average and at most about 10 %, while
+geometry and material make them vary by a factor of about 60. A surrogate with
+a 2 % frequency error would hide the damage signal entirely. Step 3b is
+designed around this.

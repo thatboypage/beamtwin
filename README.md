@@ -18,7 +18,7 @@ stiffness loss.
 |---|---|---|
 | 1. FEM solver | Euler-Bernoulli beam elements, assembly, cantilever solution | Done |
 | 2. Modal analysis | Natural frequencies and mode shapes | Done |
-| 3. Neural surrogate | Fast network trained on FEM results | Planned |
+| 3. Neural surrogate | Fast network trained on FEM results | In progress (3a: damage model and dataset) |
 | 4. Damage detection | Locate and size stiffness loss from vibration data | Planned |
 | 5. Deployment | FastAPI back end, web app, Docker | Planned |
 | 6. Real-data validation | Test on measured data (Los Alamos frame) | Planned |
