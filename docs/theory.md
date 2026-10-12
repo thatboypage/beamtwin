@@ -223,3 +223,13 @@ epochs, keeping the best weights (early stopping).
 *damage-induced frequency drop*, compared with the size of that drop. Their
 ratio (signal-to-error) shows whether damage remains visible through the
 surrogate's error.
+
+## 8. Surrogate evaluation (Step 3c)
+
+Accuracy is judged on the damage-induced frequency drop rather than on the
+frequencies themselves, because the drop is the quantity a damage detector
+uses. For each test beam the *signal* is the largest drop across the four modes,
+and the *error* is the surrogate's largest error in that drop. Damage is called
+resolvable when signal ≥ 3 × error, a common rule of thumb for a clear margin
+over noise. The share of resolvable beams, grouped by damage severity, shows the
+smallest damage each surrogate can reliably represent (notebook 02).
