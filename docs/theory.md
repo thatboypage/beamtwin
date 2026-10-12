@@ -81,3 +81,63 @@ The FEM result matches these exactly (to rounding) for any number of elements,
 because the exact solution is itself a cubic and is contained in the element's
 shape functions. For distributed loads and for vibration (Step 2), the result
 converges as the number of elements increases.
+
+## 5. Free vibration (Step 2)
+
+With inertia included, the beam equation becomes
+
+    EI · w'''' + ρA · ẅ = 0
+
+where ρ is density and A is cross-section area, so ρA is mass per unit length.
+After discretisation:
+
+    M · ü + K · u = 0
+
+**Mass matrix.** The element mass matrix uses the same cubic shape functions
+Nᵢ(x) as the stiffness matrix (a "consistent" mass matrix):
+
+    mᵢⱼ = ∫₀ᴸ ρA · Nᵢ(x) · Nⱼ(x) dx
+
+Evaluating the integrals gives
+
+                [ 156    22L    54   -13L  ]
+    m = ρAL/420 [ 22L    4L²   13L   -3L²  ]
+                [  54    13L   156   -22L  ]
+                [ -13L  -3L²  -22L    4L²  ]
+
+A rigid lift of the whole beam picks up exactly its total mass ρAL, which is
+one of the automated checks. M is assembled in the same way as K.
+
+**Eigenvalue problem.** Assuming harmonic motion u(t) = φ · sin(ωt) gives
+
+    K · φ = ω² · M · φ
+
+Each eigenvalue ω² gives a natural frequency f = ω / 2π, and each eigenvector
+φ is a mode shape. Mode n crosses zero n − 1 times along the beam.
+
+**Validation.** For a uniform cantilever,
+
+    ωₙ = (βₙL)² · √( EI / (ρA·L⁴) )
+
+with βₙL = 1.8751, 4.6941, 7.8548, 10.9955 for the first four modes (roots of
+1 + cos(βL)·cosh(βL) = 0).
+
+For the 1 m steel strip (50 × 10 mm):
+
+| Elements | Mode 1 (Hz) | Mode 2 (Hz) | Mode 3 (Hz) | Mode 4 (Hz) |
+|---|---|---|---|---|
+| 2 | 8.158 | 51.533 | 174.293 | 505.872 |
+| 4 | 8.154 | 51.159 | 144.187 | 284.449 |
+| 8 | 8.154 | 51.103 | 143.166 | 281.005 |
+| 32 | 8.154 | 51.099 | 143.079 | 280.380 |
+| Exact | 8.154 | 51.099 | 143.079 | 280.377 |
+
+Unlike the static tip-load case, the exact mode shapes are not cubics, so the
+FEM answer is only approximate and improves with more elements. Higher modes
+have more bends and need more elements. With a consistent mass matrix the FEM
+frequencies approach the exact values from above.
+
+**Why this matters for damage detection.** Frequency scales with √(stiffness).
+A crack lowers the local stiffness, which lowers the frequencies by an amount
+that depends on where the crack is relative to each mode's bending. Step 4
+uses this to work backwards from measured frequencies to the damage.
