@@ -19,7 +19,7 @@ stiffness loss.
 | 1. FEM solver | Euler-Bernoulli beam elements, assembly, cantilever solution | Done |
 | 2. Modal analysis | Natural frequencies and mode shapes | Done |
 | 3. Neural surrogate | Fast network trained on FEM results | Done |
-| 4. Damage detection | Locate and size stiffness loss from vibration data | Planned |
+| 4. Damage detection | Locate and size stiffness loss from vibration data | In progress (4a: detector and study) |
 | 5. Deployment | FastAPI back end, web app, Docker | Planned |
 | 6. Real-data validation | Test on measured data (Los Alamos frame) | Planned |
 
@@ -78,6 +78,13 @@ signal about 200× larger than the model error:
 ![Predicted vs true damage drop](docs/figures/surrogate_damage_parity.png)
 
 ![Share of beams whose damage is resolvable](docs/figures/surrogate_detection_limit.png)
+
+With the hybrid surrogate, damage of 5 % severity or more was resolvable
+(signal ≥ 3× error) for 100 % of test beams, and 82 % of beams even below 5 %.
+The plain surrogate never reached 90 % in any severity range.
+
+Speed per beam: FEM 2.75 ms; surrogate 0.23 ms called one at a time (12× faster)
+and 0.001 ms in batches of 6,000 (about 2,700× faster).
 
 Details, training curves and a speed benchmark are in
 [notebooks/02_surrogate_evaluation.ipynb](notebooks/02_surrogate_evaluation.ipynb).

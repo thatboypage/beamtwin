@@ -233,3 +233,44 @@ and the *error* is the surrogate's largest error in that drop. Damage is called
 resolvable when signal ≥ 3 × error, a common rule of thumb for a clear margin
 over noise. The share of resolvable beams, grouped by damage severity, shows the
 smallest damage each surrogate can reliably represent (notebook 02).
+
+## 9. Damage detection: the inverse problem (Step 4a)
+
+The forward problem maps damage to vibration. Damage detection is the inverse:
+given measured frequencies f̃ and mode-shape values φ̃, find the damage location
+x_d and severity α.
+
+**Measurement model.** Measured frequencies carry relative noise σ_f and
+mode-shape values absolute noise σ_φ (both Gaussian). The beam's geometry and
+material are assumed known, so the healthy frequencies follow from Section 5.
+
+**Grid posterior.** Candidates cover x_d ∈ [0.05, 0.95] in steps of 0.005 and
+α ∈ [0, 0.5] in steps of 0.005 (18,281 candidates). The forward model (the
+hybrid surrogate) predicts frequency ratios r(x_d, α) and mode shapes
+φ(x_d, α) for all candidates in one batch. The misfit is
+
+    χ² = Σₘ ((r̃ₘ − rₘ) / σ_f)² + Σₖ ((φ̃ₖ − φₖ) / σ_φ)²
+
+and, with a uniform prior over the grid, Bayes' rule gives the posterior
+
+    p(x_d, α | data) ∝ exp(−χ² / 2)
+
+The detector reports the most probable candidate, central 90 % intervals of
+the marginal posteriors, and P(α ≥ 0.05) as the probability that the beam is
+damaged.
+
+**Avoiding the inverse crime.** Test measurements are generated with the
+exact FEM and inverted with the surrogate. Using the same model for both would
+hide the surrogate's error and overstate accuracy.
+
+**Observability.** Damage near the free end of a cantilever is hard to see,
+because curvature there is small in every mode, so stiffness lost there barely
+changes the frequencies. The posterior reflects this as wider intervals and a
+non-zero probability of damage even for a healthy beam.
+
+**Why a surrogate rather than a lookup table?** Because the frequency ratios
+and mode shapes do not depend on beam size or material, a precomputed FEM table
+on the same grid would also work for this two-parameter damage model. The
+surrogate's advantage grows with the number of damage parameters: at 100 values
+per parameter, one damage zone needs 10⁴ FEM runs to tabulate, but two zones
+(four parameters) need 10⁸.
