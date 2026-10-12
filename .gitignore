@@ -24,6 +24,8 @@ models/*
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 !models/.gitkeep
+# The small exported surrogate is committed so the web app can run anywhere
+!models/surrogate_hybrid.npz
 
 # Editors and OS
 .vscode/

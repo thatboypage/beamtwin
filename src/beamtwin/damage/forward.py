@@ -17,7 +17,6 @@ from pathlib import Path
 
 import numpy as np
 
-from beamtwin.surrogate.data_generation import simulate_one
 from beamtwin.surrogate.features import healthy_frequencies
 
 
@@ -46,17 +45,28 @@ class FEMForward:
     """Exact forward model: runs the FEM once per candidate."""
 
     def __call__(self, beam: Beam, locations, severities):
+        from beamtwin.surrogate.data_generation import simulate_one   # here to avoid a circular import
+
         X = beam.inputs(locations, severities)
         Y = np.array([simulate_one(*row) for row in X])
         return Y[:, :4] / beam.healthy_frequencies(), Y[:, 4:]
 
 
 class SurrogateForward:
-    """Fast forward model: the trained hybrid surrogate from Step 3."""
+    """Fast forward model: the trained hybrid surrogate from Step 3.
+
+    model_path ending in .pt  -> the PyTorch model (needs PyTorch)
+    model_path ending in .npz -> the exported NumPy copy (no PyTorch needed; used by the web app)
+    """
 
     def __init__(self, model_path: Path = Path("models/surrogate_hybrid.pt")):
-        from beamtwin.surrogate.model import Surrogate      # imported here so numpy-only users never need torch
-        self.surrogate = Surrogate.load(model_path)
+        model_path = Path(model_path)
+        if model_path.suffix == ".npz":
+            from beamtwin.surrogate.export import NumpySurrogate
+            self.surrogate = NumpySurrogate.load(model_path)
+        else:
+            from beamtwin.surrogate.model import Surrogate  # imported here so numpy-only users never need torch
+            self.surrogate = Surrogate.load(model_path)
         if self.surrogate.kind != "hybrid":
             raise ValueError("SurrogateForward expects the hybrid surrogate")
 

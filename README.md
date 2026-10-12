@@ -20,7 +20,7 @@ stiffness loss.
 | 2. Modal analysis | Natural frequencies and mode shapes | Done |
 | 3. Neural surrogate | Fast network trained on FEM results | Done |
 | 4. Damage detection | Locate and size stiffness loss from vibration data | Done |
-| 5. Deployment | FastAPI back end, web app, Docker | Planned |
+| 5. Deployment | FastAPI back end, web app, Docker | In progress (5a: API) |
 | 6. Real-data validation | Test on measured data (Los Alamos frame) | Planned |
 
 ## Validation so far
@@ -131,7 +131,7 @@ src/beamtwin/
     surrogate/    neural surrogate (Step 3)
     damage/       damage simulation and detection (Step 4)
     validation/   comparison with measured data
-api/              FastAPI back end (Step 5)
+api/              FastAPI web API (Step 5)
 app/              web front end (Step 5)
 tests/            automated checks, run on every commit
 notebooks/        worked analyses with plots (01: modal, 02: surrogate, 03: detection)
@@ -144,9 +144,17 @@ docs/             theory and figures
 python -m venv .venv
 # Windows:      .venv\Scripts\activate
 # macOS/Linux:  source .venv/bin/activate
-pip install -e ".[dev,ml]"
+pip install -e ".[dev,ml,web]"
 pytest -v
 ```
+
+Run the web API locally (uses the exported model in `models/surrogate_hybrid.npz`):
+
+```bash
+uvicorn api.main:app --reload
+```
+
+Then open http://127.0.0.1:8000/docs for interactive API documentation.
 
 Example:
 

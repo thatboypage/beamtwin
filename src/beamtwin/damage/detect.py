@@ -23,7 +23,6 @@ from dataclasses import dataclass
 import numpy as np
 
 from beamtwin.damage.forward import Beam
-from beamtwin.surrogate.data_generation import simulate_one
 
 DEFAULT_LOCATIONS = np.linspace(0.05, 0.95, 181)      # every 0.5 % of the length
 DEFAULT_SEVERITIES = np.linspace(0.0, 0.5, 101)       # every 0.5 % of stiffness
@@ -48,6 +47,10 @@ def simulate_measurement(beam: Beam, location: float, severity: float,
     damage. Generating and inverting data with the same model (the "inverse crime")
     makes a method look better than it really is.
     """
+    # Imported here, not at the top: data_generation itself uses the damage package,
+    # so a top-level import would make each file wait for the other (a circular import).
+    from beamtwin.surrogate.data_generation import simulate_one
+
     rng = np.random.default_rng() if rng is None else rng
     y = simulate_one(beam.length, beam.width, beam.thickness, beam.E, beam.rho, location, severity)
     freqs = y[:4] * (1 + freq_noise * rng.standard_normal(4))
