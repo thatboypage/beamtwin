@@ -18,3 +18,23 @@ jobs:
           pip install -e ".[dev,ml,web]"
       - name: Run tests
         run: pytest -v
+
+  docker:
+    # Build the deployable image and check that it starts and answers, exactly as a host would run it.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t beamtwin .
+      - name: Start the container and check it answers
+        run: |
+          docker run -d -p 8000:8000 --name beamtwin beamtwin
+          for i in $(seq 1 30); do curl -sf http://localhost:8000/api/health && break; sleep 1; done
+          curl -sf http://localhost:8000/api/health
+          curl -sf http://localhost:8000/ | grep -q BeamTwin
+          curl -sf -X POST http://localhost:8000/api/detect -H "Content-Type: application/json" \
+            -d '{"beam":{"length":1,"width":0.05,"thickness":0.01,"E":2e11,"rho":7850},"frequencies":[8.0781,50.39698,141.75926,277.75711]}' \
+            | grep -q '"location"'
+      - name: Show container logs if anything failed
+        if: failure()
+        run: docker logs beamtwin

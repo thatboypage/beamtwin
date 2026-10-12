@@ -9,6 +9,7 @@ Every function takes and returns plain numbers, lists and dictionaries, which
 translate directly to and from JSON, the text format websites exchange.
 """
 
+import os
 from functools import lru_cache
 from pathlib import Path
 
@@ -41,7 +42,12 @@ NOISE_LEVELS = {
 }
 
 _RANGES = {name: (low, high) for name, low, high, _ in PARAMETER_RANGES}
-DEFAULT_MODEL = Path(__file__).resolve().parents[2] / "models" / "surrogate_hybrid.npz"
+# Where the exported surrogate lives. The BEAMTWIN_MODEL environment variable overrides it,
+# which the Docker image uses because an installed package no longer sits next to models/.
+DEFAULT_MODEL = Path(os.environ.get(
+    "BEAMTWIN_MODEL",
+    Path(__file__).resolve().parents[2] / "models" / "surrogate_hybrid.npz",
+))
 
 
 @lru_cache(maxsize=2)

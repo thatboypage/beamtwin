@@ -20,7 +20,7 @@ stiffness loss.
 | 2. Modal analysis | Natural frequencies and mode shapes | Done |
 | 3. Neural surrogate | Fast network trained on FEM results | Done |
 | 4. Damage detection | Locate and size stiffness loss from vibration data | Done |
-| 5. Deployment | FastAPI back end, web app, Docker | In progress (5a API, 5b web page) |
+| 5. Deployment | FastAPI back end, web app, Docker | In progress (5a API, 5b web page, 5c Docker) |
 | 6. Real-data validation | Test on measured data (Los Alamos frame) | Planned |
 
 ## Validation so far
@@ -156,6 +156,16 @@ uvicorn api.main:app --reload
 
 Then open http://127.0.0.1:8000 for the web app (hide a crack, simulate the sensors,
 and find the damage), or http://127.0.0.1:8000/docs for interactive API documentation.
+
+Or run it in Docker, exactly as it is deployed (needs Docker installed):
+
+```bash
+docker build -t beamtwin .
+docker run -p 8000:8000 beamtwin
+```
+
+The image contains only what the app needs to run (NumPy, SciPy, FastAPI and the 52 KB
+exported model, no PyTorch). GitHub Actions builds and starts it on every push.
 
 Example:
 
