@@ -10,6 +10,8 @@ stiffness loss.
 
 > Status: work in progress. Steps 1-2 (static and modal FEM) are complete and validated.
 
+![First four mode shapes of the cantilever](docs/figures/mode_shapes.png)
+
 ## Roadmap
 
 | Step | What it does | Status |
@@ -43,7 +45,12 @@ Natural frequencies of the same beam (32 elements):
 | 3 | 143.079 | 143.079 | 0.0003% |
 | 4 | 280.380 | 280.377 | 0.0010% |
 
-See [docs/theory.md](docs/theory.md) for derivations and a convergence study.
+Error falls steadily as elements are added, at the rate expected for cubic beam elements:
+
+![Convergence of FEM natural frequencies](docs/figures/convergence.png)
+
+See [docs/theory.md](docs/theory.md) for derivations, and
+[notebooks/01_modal_analysis.ipynb](notebooks/01_modal_analysis.ipynb) for the worked analysis.
 
 ## Project layout
 
@@ -56,7 +63,7 @@ src/beamtwin/
 api/              FastAPI back end (Step 5)
 app/              web front end (Step 5)
 tests/            automated checks, run on every commit
-notebooks/        worked examples with plots
+notebooks/        worked analyses with plots (01: modal analysis)
 docs/             theory and figures
 ```
 
