@@ -184,3 +184,42 @@ the frequencies by about 1.5 % on average and at most about 10 %, while
 geometry and material make them vary by a factor of about 60. A surrogate with
 a 2 % frequency error would hide the damage signal entirely. Step 3b is
 designed around this.
+
+## 7. Neural surrogate (Step 3b)
+
+A surrogate is a fast approximation of an expensive model. Here a small neural
+network (a multilayer perceptron: three hidden layers of 64 units with SiLU
+activations) learns to map beam and damage parameters to the 40 FEM outputs.
+
+**Two designs are compared on the same data, split 70 / 15 / 15 into
+training, validation and test sets.**
+
+*Plain.* The network receives all seven inputs (the five dimensional ones as
+logarithms) and predicts log-frequencies and mode-shape values directly.
+
+*Hybrid.* For a uniform cantilever every frequency scales as
+
+    f ∝ √( EI / (ρA·L⁴) )
+
+and the damage profile multiplies EI by the same dimensionless function of
+x / L for any beam. These common factors therefore cancel in the ratio
+f_damaged / f_healthy, which depends only on damage location and severity. The
+hybrid surrogate computes f_healthy exactly from the formula in Section 5 and
+trains the network on the two damage inputs to predict only that ratio (and the
+mode shapes, which are likewise independent of size and material):
+
+    f_predicted = f_healthy(formula) × ratio(network)
+
+Physics reduces the learning problem from seven inputs to two and removes the
+60-fold range of frequencies from what the network must learn.
+
+**Training.** Inputs and targets are standardised using training-set
+statistics only. The loss is mean squared error, minimised with Adam (initial
+learning rate 10⁻³, mini-batches of 128). The learning rate is halved when the
+validation loss stalls, and training stops when it has not improved for 200
+epochs, keeping the best weights (early stopping).
+
+**Metrics.** Besides frequency error, the key metric is the error in the
+*damage-induced frequency drop*, compared with the size of that drop. Their
+ratio (signal-to-error) shows whether damage remains visible through the
+surrogate's error.
