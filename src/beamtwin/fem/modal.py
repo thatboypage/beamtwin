@@ -40,8 +40,12 @@ def assemble_mass(rho: float, A: float, length: float, n_elements: int) -> np.nd
 
 
 def cantilever_modes(E: float, I: float, rho: float, A: float, length: float,
-                     n_elements: int, n_modes: int = 4):
+                     n_elements: int, n_modes: int = 4,
+                     stiffness_factors: np.ndarray | None = None):
     """Solve K phi = omega^2 M phi for a cantilever clamped at node 0.
+
+    stiffness_factors : optional per-element stiffness multipliers (1 = healthy),
+        passed straight to assemble_stiffness. Used to model damage.
 
     Returns
     -------
@@ -50,7 +54,7 @@ def cantilever_modes(E: float, I: float, rho: float, A: float, length: float,
                (the clamped ones are zero). Each shape is scaled so its tip
                deflection is +1.
     """
-    K = assemble_stiffness(E, I, length, n_elements)
+    K = assemble_stiffness(E, I, length, n_elements, stiffness_factors)
     M = assemble_mass(rho, A, length, n_elements)
     n_dof = K.shape[0]
 
