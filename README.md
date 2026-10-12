@@ -20,7 +20,7 @@ stiffness loss.
 | 2. Modal analysis | Natural frequencies and mode shapes | Done |
 | 3. Neural surrogate | Fast network trained on FEM results | Done |
 | 4. Damage detection | Locate and size stiffness loss from vibration data | Done |
-| 5. Deployment | FastAPI back end, web app, Docker | In progress (5a: API) |
+| 5. Deployment | FastAPI back end, web app, Docker | In progress (5a API, 5b web page) |
 | 6. Real-data validation | Test on measured data (Los Alamos frame) | Planned |
 
 ## Validation so far
@@ -132,7 +132,7 @@ src/beamtwin/
     damage/       damage simulation and detection (Step 4)
     validation/   comparison with measured data
 api/              FastAPI web API (Step 5)
-app/              web front end (Step 5)
+app/static/       web page: HTML, CSS and JavaScript (Step 5)
 tests/            automated checks, run on every commit
 notebooks/        worked analyses with plots (01: modal, 02: surrogate, 03: detection)
 docs/             theory and figures
@@ -154,7 +154,8 @@ Run the web API locally (uses the exported model in `models/surrogate_hybrid.npz
 uvicorn api.main:app --reload
 ```
 
-Then open http://127.0.0.1:8000/docs for interactive API documentation.
+Then open http://127.0.0.1:8000 for the web app (hide a crack, simulate the sensors,
+and find the damage), or http://127.0.0.1:8000/docs for interactive API documentation.
 
 Example:
 

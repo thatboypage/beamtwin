@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BeamTwin: damage detection for cantilever beams</title>
+  <meta name="description" content="Hide a crack in a cantilever beam, simulate its vibration, and watch a physics-informed digital twin find it.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='2' y='4' width='5' height='24' fill='%231c2a36'/%3E%3Crect x='7' y='13' width='23' height='6' fill='%232a78d6'/%3E%3C/svg%3E">
+</head>
+<body>
+  <header class="masthead">
+    <h1>BeamTwin</h1>
+    <p class="lede">A digital twin of a cantilever beam. Hide a crack, simulate what vibration sensors would measure,
+      and see whether the model can find it, with honest uncertainty.</p>
+  </header>
+
+  <main class="layout">
+    <form id="controls" class="controls" novalidate>
+      <section aria-labelledby="beam-heading">
+        <h2 id="beam-heading">The beam</h2>
+        <div class="field-row">
+          <label>Material
+            <select id="material"></select>
+          </label>
+        </div>
+        <div class="field-row three">
+          <label><span>Length <span class="unit">(m)</span></span>
+            <input id="length" type="number" step="0.05" min="0.1" value="1.0" inputmode="decimal">
+          </label>
+          <label><span>Width <span class="unit">(mm)</span></span>
+            <input id="width" type="number" step="1" min="1" value="50" inputmode="decimal">
+          </label>
+          <label><span>Thickness <span class="unit">(mm)</span></span>
+            <input id="thickness" type="number" step="0.5" min="0.5" value="10" inputmode="decimal">
+          </label>
+        </div>
+        <p class="hint">Trained for 0.5–2 m long, 20–100 mm wide, 5–20 mm thick, structural metals.</p>
+      </section>
+
+      <section aria-labelledby="measure-heading">
+        <h2 id="measure-heading">The measurement</h2>
+        <fieldset class="simulate">
+          <legend>Hide a crack and simulate the sensors</legend>
+          <label class="slider">Crack position <output id="location-out">40 % of the length</output>
+            <input id="location" type="range" min="5" max="95" step="1" value="40">
+          </label>
+          <label class="slider">Crack severity <output id="severity-out">20 % stiffness lost</output>
+            <input id="severity" type="range" min="0" max="50" step="1" value="20">
+          </label>
+          <label>Sensor quality
+            <select id="noise"></select>
+          </label>
+          <button type="button" id="simulate" class="secondary">Simulate measurement</button>
+        </fieldset>
+
+        <fieldset>
+          <legend>Measured natural frequencies <span class="unit">(Hz)</span></legend>
+          <div class="field-row two">
+            <label><span>Mode 1</span><input id="f1" type="number" step="any" inputmode="decimal"></label>
+            <label><span>Mode 2</span><input id="f2" type="number" step="any" inputmode="decimal"></label>
+            <label><span>Mode 3</span><input id="f3" type="number" step="any" inputmode="decimal"></label>
+            <label><span>Mode 4</span><input id="f4" type="number" step="any" inputmode="decimal"></label>
+          </div>
+          <label class="check">
+            <input id="use-shapes" type="checkbox" disabled>
+            Also use the simulated mode shapes from 9 sensors
+          </label>
+          <p class="hint">Simulate a measurement, or type in frequencies measured on your own beam.</p>
+        </fieldset>
+      </section>
+
+      <button type="submit" id="detect" class="primary">Find damage</button>
+      <p id="form-error" class="error" role="alert" hidden></p>
+    </form>
+
+    <section class="results" aria-labelledby="results-heading" aria-live="polite">
+      <h2 id="results-heading" class="visually-hidden">Results</h2>
+
+      <figure class="beam-figure">
+        <svg id="beam-svg" viewBox="0 0 640 170" role="img" aria-labelledby="beam-title">
+          <title id="beam-title">Diagram of the cantilever beam</title>
+        </svg>
+        <figcaption id="beam-caption">The beam, clamped on the left. Simulate a measurement, then find the damage.</figcaption>
+      </figure>
+
+      <div id="verdict" class="verdict" hidden></div>
+
+      <div id="detail" hidden>
+        <figure class="map-figure">
+          <div class="map-head">
+            <button type="button" id="zoom" class="secondary small">Show all possible cracks</button>
+          </div>
+          <div class="map-wrap">
+            <canvas id="map" width="181" height="101" aria-hidden="true"></canvas>
+            <svg id="map-axes" aria-hidden="true"></svg>
+            <div id="map-tip" class="tip" hidden></div>
+          </div>
+          <figcaption>How likely each possible crack is, given the measurement. Darker blue is more likely.
+            <span class="key"><span class="key-circle"></span> hidden crack</span>
+            <span class="key"><span class="key-cross">×</span> detected</span>
+          </figcaption>
+        </figure>
+
+        <table class="freq-table">
+          <caption>Frequencies: healthy beam vs. measurement</caption>
+          <thead><tr><th scope="col">Mode</th><th scope="col">Healthy (Hz)</th><th scope="col">Measured (Hz)</th><th scope="col">Drop</th></tr></thead>
+          <tbody id="freq-body"></tbody>
+        </table>
+      </div>
+
+      <ul id="warnings" class="warnings" hidden></ul>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Finite element model and neural surrogate built from scratch; results are from simulated data.
+      One crack, uniform beam, properties known exactly.
+      <a href="https://github.com/thatboypage/beamtwin">Code, method and limitations on GitHub</a>.
+      <a href="/docs">API documentation</a>.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

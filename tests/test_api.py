@@ -59,3 +59,10 @@ def test_bad_requests_are_rejected(client):
     assert client.post("/api/simulate", json={"beam": BEAM, "location": 2.0, "severity": 0.2}).status_code == 422
     bad_beam = {**BEAM, "length": -1}
     assert client.post("/api/analyze", json=bad_beam).status_code == 422
+
+
+def test_web_page_is_served(client):
+    r = client.get("/")
+    assert r.status_code == 200 and "BeamTwin" in r.text
+    for asset in ["/style.css", "/app.js"]:
+        assert client.get(asset).status_code == 200
