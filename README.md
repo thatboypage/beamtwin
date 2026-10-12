@@ -8,7 +8,7 @@ vibrates. A neural surrogate learns to give the same answers in milliseconds,
 and a damage detector works backwards from vibration readings to locate and size
 stiffness loss.
 
-> Status: work in progress. Steps 1-3 (FEM, modal analysis, neural surrogate) are complete and validated.
+> Status: work in progress. Steps 1-4 (FEM, modal analysis, neural surrogate, damage detection) are complete and validated on simulated data.
 
 ![First four mode shapes of the cantilever](docs/figures/mode_shapes.png)
 
@@ -19,7 +19,7 @@ stiffness loss.
 | 1. FEM solver | Euler-Bernoulli beam elements, assembly, cantilever solution | Done |
 | 2. Modal analysis | Natural frequencies and mode shapes | Done |
 | 3. Neural surrogate | Fast network trained on FEM results | Done |
-| 4. Damage detection | Locate and size stiffness loss from vibration data | In progress (4a: detector and study) |
+| 4. Damage detection | Locate and size stiffness loss from vibration data | Done |
 | 5. Deployment | FastAPI back end, web app, Docker | Planned |
 | 6. Real-data validation | Test on measured data (Los Alamos frame) | Planned |
 
@@ -89,6 +89,40 @@ and 0.001 ms in batches of 6,000 (about 2,700× faster).
 Details, training curves and a speed benchmark are in
 [notebooks/02_surrogate_evaluation.ipynb](notebooks/02_surrogate_evaluation.ipynb).
 
+## Damage detection (Step 4)
+
+Given four measured natural frequencies and four mode shapes at nine sensors, the
+detector finds where the damage is and how severe it is. It evaluates 18,281
+candidate damage states with the hybrid surrogate in one batch, converts the
+mismatch with the measurement into probabilities (Bayes' rule with Gaussian
+sensor noise), and reports the most likely damage with 90 % ranges and the
+probability that the beam is damaged at all.
+
+![Probability map of damage location and severity](docs/figures/detection_examples.png)
+
+Accuracy study: 200 damaged and 50 healthy beams per noise level. Measurements
+were generated with the exact FEM plus noise and inverted with the surrogate, so
+the surrogate's own error is included in the results.
+
+| | Low noise | Medium noise | High noise |
+|---|---|---|---|
+| Frequency / mode-shape noise | ±0.1 % / ±0.01 | ±0.2 % / ±0.02 | ±0.5 % / ±0.05 |
+| Location error, median | 0.3 % of length | 0.5 % | 1.3 % |
+| Location error, 90th percentile | 1.0 % | 2.6 % | 16.6 % |
+| Severity error, median | 0.4 % points | 1.0 | 1.9 |
+| Truth inside 90 % location range | 82 % | 90 % | 92 % |
+| Damaged beams detected | 100 % | 98 % | 100 % |
+| False alarms on healthy beams | 0 % | 4 % | 32 % |
+| Time per detection | 0.03 s | 0.03 s | 0.03 s |
+
+![Detected vs true damage location](docs/figures/detection_location_parity.png)
+
+With good sensors, damage on a 1 m beam is typically located within about 5 mm.
+The main weaknesses are false alarms and occasional misplaced damage with noisy
+sensors, and lower sensitivity near the free tip, where a cantilever hardly
+bends. Worked examples are in
+[notebooks/03_damage_detection.ipynb](notebooks/03_damage_detection.ipynb).
+
 ## Project layout
 
 ```
@@ -100,7 +134,7 @@ src/beamtwin/
 api/              FastAPI back end (Step 5)
 app/              web front end (Step 5)
 tests/            automated checks, run on every commit
-notebooks/        worked analyses with plots (01: modal analysis, 02: surrogate)
+notebooks/        worked analyses with plots (01: modal, 02: surrogate, 03: detection)
 docs/             theory and figures
 ```
 
@@ -137,6 +171,10 @@ print("Natural frequencies (Hz):", freqs)
   cracks can differ in shape, and several can occur at once.
 - The surrogate is only valid inside the sampled ranges (0.5–2 m long, metals,
   severity up to 50 %). Outside them its predictions are extrapolations.
+- The detector assumes the beam's geometry and material are known exactly and
+  that there is one damage zone. Errors in those assumptions are not yet modelled.
+- With noisy sensors (±0.5 % frequencies), about a third of healthy beams raise
+  a false alarm.
 - All results so far use simulated data. Validation on measured data is a
   planned later stage.
 
