@@ -8,14 +8,14 @@ vibrates. A neural surrogate learns to give the same answers in milliseconds,
 and a damage detector works backwards from vibration readings to locate and size
 stiffness loss.
 
-> Status: work in progress. Step 1 (static FEM solver) is complete and validated.
+> Status: work in progress. Steps 1-2 (static and modal FEM) are complete and validated.
 
 ## Roadmap
 
 | Step | What it does | Status |
 |---|---|---|
 | 1. FEM solver | Euler-Bernoulli beam elements, assembly, cantilever solution | Done |
-| 2. Modal analysis | Natural frequencies and mode shapes | Planned |
+| 2. Modal analysis | Natural frequencies and mode shapes | Done |
 | 3. Neural surrogate | Fast network trained on FEM results | Planned |
 | 4. Damage detection | Locate and size stiffness loss from vibration data | Planned |
 | 5. Deployment | FastAPI back end, web app, Docker | Planned |
@@ -32,7 +32,18 @@ For a steel cantilever (1 m long, 50 x 10 mm section, 10 N tip load):
 
 The FEM result matches the textbook to rounding error for any number of
 elements, because the cubic shape functions contain the exact solution for a
-tip load. See [docs/theory.md](docs/theory.md).
+tip load.
+
+Natural frequencies of the same beam (32 elements):
+
+| Mode | FEM (Hz) | Textbook (Hz) | Error |
+|---|---|---|---|
+| 1 | 8.154 | 8.154 | < 0.0001% |
+| 2 | 51.099 | 51.099 | < 0.0001% |
+| 3 | 143.079 | 143.079 | 0.0003% |
+| 4 | 280.380 | 280.377 | 0.0010% |
+
+See [docs/theory.md](docs/theory.md) for derivations and a convergence study.
 
 ## Project layout
 
@@ -66,6 +77,12 @@ from beamtwin.fem import solve_cantilever
 
 u = solve_cantilever(E=200e9, I=4.1667e-9, length=1.0, n_elements=8, tip_load=-10.0)
 print("Tip deflection (m):", u[-2])
+
+from beamtwin.fem import cantilever_modes
+
+freqs, shapes = cantilever_modes(E=200e9, I=4.1667e-9, rho=7850, A=5e-4,
+                                 length=1.0, n_elements=16, n_modes=4)
+print("Natural frequencies (Hz):", freqs)
 ```
 
 ## Limitations
