@@ -15,6 +15,6 @@ jobs:
       - name: Install
         run: |
           pip install torch --index-url https://download.pytorch.org/whl/cpu
-          pip install -e ".[dev,ml]"
+          pip install -e ".[dev,ml,web]"
       - name: Run tests
         run: pytest -v
