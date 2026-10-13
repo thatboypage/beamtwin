@@ -8,7 +8,12 @@ vibrates. A neural surrogate learns to give the same answers in milliseconds,
 and a damage detector works backwards from vibration readings to locate and size
 stiffness loss.
 
-> Status: work in progress. Steps 1-4 (FEM, modal analysis, neural surrogate, damage detection) are complete and validated on simulated data.
+**Live demo: [beamtwin.onrender.com](https://beamtwin.onrender.com)**: hide a crack in a beam, simulate
+the vibration sensors, and watch the digital twin find it. (Free hosting: the first visit after a quiet
+spell can take about a minute to wake the server.)
+
+> Status: Steps 1-5 (FEM, modal analysis, neural surrogate, damage detection, deployment) are complete
+> and validated on simulated data. Validation on a physical beam is planned next.
 
 ![First four mode shapes of the cantilever](docs/figures/mode_shapes.png)
 
@@ -20,8 +25,8 @@ stiffness loss.
 | 2. Modal analysis | Natural frequencies and mode shapes | Done |
 | 3. Neural surrogate | Fast network trained on FEM results | Done |
 | 4. Damage detection | Locate and size stiffness loss from vibration data | Done |
-| 5. Deployment | FastAPI back end, web app, Docker | In progress (5a API, 5b web page, 5c Docker) |
-| 6. Real-data validation | Test on measured data (Los Alamos frame) | Planned |
+| 5. Deployment | FastAPI back end, web app, Docker, live on Render | Done |
+| 6. Real-data validation | Vibration test on a physical clamped steel strip | Planned |
 
 ## Validation so far
 
